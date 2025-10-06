@@ -19,10 +19,10 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin Routes - Protected by admin middleware
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'permission:admin.access'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('/users', [AdminController::class, 'users'])->name('users.index');
-    Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.update-role');
+    Route::get('/users', [AdminController::class, 'users'])->name('users.index')->middleware('permission:users.view');
+    Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.update-role')->middleware('permission:users.manage-roles');
 });
 
 require __DIR__.'/auth.php';

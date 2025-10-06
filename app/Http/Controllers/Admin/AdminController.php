@@ -14,8 +14,18 @@ class AdminController extends Controller
     {
         $stats = [
             'total_users' => \App\Models\User::count(),
-            'admin_users' => \App\Models\User::where('role', 'admin')->count(),
-            'regular_users' => \App\Models\User::where('role', 'user')->count(),
+            'admin_users' => \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->count(),
+            'editor_users' => \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'editor');
+            })->count(),
+            'author_users' => \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'author');
+            })->count(),
+            'regular_users' => \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'user');
+            })->count(),
         ];
 
         return view('admin.dashboard', compact('stats'));
@@ -26,8 +36,9 @@ class AdminController extends Controller
      */
     public function users()
     {
-        $users = \App\Models\User::paginate(15);
-        return view('admin.users.index', compact('users'));
+        $users = \App\Models\User::with('roles')->paginate(15);
+        $roles = \App\Models\Role::where('is_active', true)->get();
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     /**
@@ -36,10 +47,11 @@ class AdminController extends Controller
     public function updateUserRole(Request $request, \App\Models\User $user)
     {
         $request->validate([
-            'role' => 'required|in:user,admin'
+            'role_id' => 'required|exists:roles,id'
         ]);
 
-        $user->update(['role' => $request->role]);
+        $role = \App\Models\Role::findOrFail($request->role_id);
+        $user->roles()->sync([$role->id]);
 
         return redirect()->back()->with('success', 'User role updated successfully.');
     }

@@ -52,10 +52,22 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                {{ $user->role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
-                                                {{ ucfirst($user->role) }}
-                                            </span>
+                                            @if($user->roles->count() > 0)
+                                                @foreach($user->roles as $role)
+                                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mr-1 mb-1
+                                                        @if($role->name === 'admin') bg-red-100 text-red-800
+                                                        @elseif($role->name === 'editor') bg-purple-100 text-purple-800
+                                                        @elseif($role->name === 'author') bg-yellow-100 text-yellow-800
+                                                        @else bg-green-100 text-green-800
+                                                        @endif">
+                                                        {{ $role->display_name }}
+                                                    </span>
+                                                @endforeach
+                                            @else
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    No Role
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $user->created_at->format('M d, Y') }}
@@ -65,10 +77,15 @@
                                                 <form method="POST" action="{{ route('admin.users.update-role', $user) }}" class="inline">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <select name="role" onchange="this.form.submit()" 
+                                                    <select name="role_id" onchange="this.form.submit()"
                                                             class="text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                                                        <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
-                                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                                        <option value="">Select Role</option>
+                                                        @foreach($roles as $role)
+                                                            <option value="{{ $role->id }}"
+                                                                {{ $user->roles->contains('id', $role->id) ? 'selected' : '' }}>
+                                                                {{ $role->display_name }}
+                                                            </option>
+                                                        @endforeach
                                                     </select>
                                                 </form>
                                             @else
